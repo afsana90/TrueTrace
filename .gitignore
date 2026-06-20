@@ -1,0 +1,28 @@
+# ── Secret files — NEVER upload these ──
+backend/.env
+.env
+*.env
+
+# ── Python cache ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Downloaded OCR models (large files) ──
+.paddleocr/
+.EasyOCR/
+*.tar
+*.tar.gz
+
+# ── OS files ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor files ──
+.vscode/
+.idea/
+*.swp
+*.swo

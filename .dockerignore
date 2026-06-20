@@ -1,0 +1,10 @@
+backend/.env
+.env
+*.env
+__pycache__/
+*.pyc
+.git/
+.venv/
+venv/
+.paddleocr/
+.EasyOCR/

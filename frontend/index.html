@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrueTrace — Handwriting Recognition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+<div class="bg-canvas" aria-hidden="true">
+  <div class="blob blob-1"></div><div class="blob blob-2"></div>
+  <div class="blob blob-3"></div><div class="blob blob-4"></div>
+</div>
+
+<header class="tt-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="white"/>
+          <path d="M20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="rgba(255,255,255,.7)"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-name">TrueTrace</h1>
+        <p class="brand-sub">Multilingual Handwriting Recognition System</p>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting…</span>
+    </div>
+  </div>
+</header>
+
+<main class="tt-main">
+  <div class="tab-row">
+    <button class="tab active" data-mode="upload">
+      <svg viewBox="0 0 20 20" class="tab-ico" fill="currentColor"><path d="M10 2L3 9h4v9h6V9h4L10 2z"/></svg>Image Upload
+    </button>
+    <button class="tab" data-mode="draw">
+      <svg viewBox="0 0 20 20" class="tab-ico" fill="currentColor"><path d="M3 17l1.5-5.5L14 2l3.5 3.5L7.5 16 3 17zm2.2-1.7l.7-2.6 1.9 1.9-2.6.7zm2.8-1l-2-2 7-7 2 2-7 7z"/></svg>Drawing Pad
+    </button>
+    <button class="tab" data-mode="video">
+      <svg viewBox="0 0 20 20" class="tab-ico" fill="currentColor"><path d="M4 5a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1v-2l4 3V6l-4 3V6a1 1 0 00-1-1H4z"/></svg>Video Scan
+    </button>
+    <button class="tab" data-mode="webcam">
+      <svg viewBox="0 0 20 20" class="tab-ico" fill="currentColor"><circle cx="10" cy="10" r="3"/><path d="M10 1a9 9 0 100 18A9 9 0 0010 1zm0 14.5a5.5 5.5 0 110-11 5.5 5.5 0 010 10z"/></svg>Live Scan
+    </button>
+  </div>
+
+  <div class="panels">
+
+    
+    <section class="panel active" id="panel-upload">
+      <div class="two-col">
+        <div class="card card-input">
+          <div class="card-label">INPUT</div>
+          <div class="dropzone" id="uploadDrop">
+            <input type="file" id="uploadInput" accept="image/*" hidden />
+            <div class="dz-body" id="uploadDzBody">
+              <div class="dz-icon">📄</div>
+              <p class="dz-title">Drop your image here</p>
+              <p class="dz-sub">or <button class="dz-link" id="uploadBrowse">browse files</button></p>
+              <p class="dz-formats">JPG · PNG · WEBP · BMP</p>
+            </div>
+          </div>
+          <div class="file-chip" id="uploadChip" style="display:none">
+            <div class="chip-thumb" id="uploadThumb"></div>
+            <span class="chip-name" id="uploadName"></span>
+            <button class="chip-remove" id="uploadRemove">✕</button>
+          </div>
+          
+          <div class="field-group">
+            <label class="field-label">Recognition Language</label>
+            <select class="lang-select" id="uploadLang">
+              <option value="auto">🌐 Auto Detect</option>
+            </select>
+          </div>
+          
+          <div class="field-group">
+            <label class="field-label">Translate Result To</label>
+            <div class="translate-btns" id="uploadTranslateBtns">
+              <button class="trans-btn active" data-lang="">None</button>
+              <button class="trans-btn" data-lang="en">🇬🇧 English</button>
+              <button class="trans-btn" data-lang="bn">🇧🇩 Bangla</button>
+            </div>
+          </div>
+          <label class="toggle-row">
+            <input type="checkbox" id="uploadPreprocess" checked class="sr-only" />
+            <span class="toggle"><span class="toggle-knob"></span></span>
+            <span class="toggle-label">Smart preprocessing</span>
+          </label>
+          <button class="btn-primary" id="uploadBtn" disabled>
+            Recognise Handwriting
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M10 3l7 7-7 7-1.4-1.4 4.6-4.6H3V9h10.2L8.6 4.4 10 3z"/></svg>
+          </button>
+        </div>
+
+        <div class="card card-result">
+          <div class="card-label">RESULT</div>
+          <div class="result-area">
+            <div class="state-idle" id="uploadIdle"><div class="idle-icon">✦</div><p>Recognised text appears here</p></div>
+            <div class="state-working" id="uploadWorking" style="display:none">
+              <div class="dots-loader"><span></span><span></span><span></span><span></span></div>
+              <p class="working-msg" id="uploadWorkingMsg">Processing…</p>
+            </div>
+            <div class="state-output" id="uploadOutput" style="display:none">
+              
+              <div class="overlay-img-wrap" id="uploadOverlayWrap" style="display:none">
+                <img id="uploadOverlayImg" src="" alt="OCR Overlay" class="overlay-img" />
+              </div>
+              <div class="meta-bar" id="uploadMeta"></div>
+              <div class="conf-bar-wrap" id="uploadConf"></div>
+              <div class="notebook" id="uploadNotebook"></div>
+              
+              <div class="translation-panel" id="uploadTransPanel" style="display:none">
+                <div class="trans-header">
+                  <span class="trans-title" id="uploadTransTitle">Translation</span>
+                  <button class="btn-action" onclick="copyText('uploadTransRaw')">📋 Copy</button>
+                </div>
+                <div class="notebook trans-notebook" id="uploadTransNotebook"></div>
+                <textarea id="uploadTransRaw" hidden></textarea>
+              </div>
+              <div class="action-row">
+                <button class="btn-action" onclick="copyText('uploadRaw')">📋 Copy OCR</button>
+                <button class="btn-action" onclick="downloadTxt('uploadRaw','truetrace_image')">💾 Save .txt</button>
+              </div>
+              <textarea id="uploadRaw" hidden></textarea>
+            </div>
+            <div class="state-error" id="uploadError" style="display:none">
+              <span class="err-ico">⚠</span><span id="uploadErrMsg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="panel" id="panel-draw">
+      <div class="draw-layout">
+        <div class="card draw-sidebar">
+          <div class="card-label">TOOLS</div>
+          <div class="tool-block">
+            <p class="tool-title">Pen Size</p>
+            <div class="slider-row">
+              <input type="range" id="penSize" min="2" max="24" value="6" class="slider" />
+              <span class="slider-val" id="penSizeVal">6</span>
+            </div>
+          </div>
+          <div class="tool-block">
+            <p class="tool-title">Ink Colour</p>
+            <div class="swatches">
+              <button class="swatch active" data-c="#1a1a2e" style="background:#1a1a2e"></button>
+              <button class="swatch" data-c="#1565C0" style="background:#1565C0"></button>
+              <button class="swatch" data-c="#B71C1C" style="background:#B71C1C"></button>
+              <button class="swatch" data-c="#1B5E20" style="background:#1B5E20"></button>
+              <button class="swatch" data-c="#6A1B9A" style="background:#6A1B9A"></button>
+              <button class="swatch" data-c="#E65100" style="background:#E65100"></button>
+            </div>
+          </div>
+          <div class="tool-block">
+            <p class="tool-title">Canvas Background</p>
+            <div class="bg-btns">
+              <button class="bg-btn active" data-bg="#ffffff">White</button>
+              <button class="bg-btn" data-bg="#fffde7">Cream</button>
+              <button class="bg-btn dark" data-bg="#1a1a2e">Dark</button>
+            </div>
+          </div>
+          <div class="draw-actions">
+            <button class="btn-ghost" id="drawUndo">↩ Undo</button>
+            <button class="btn-ghost" id="drawClear">✕ Clear</button>
+          </div>
+          <button class="btn-primary" id="drawRecognise">
+            Recognise
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M10 3l7 7-7 7-1.4-1.4 4.6-4.6H3V9h10.2L8.6 4.4 10 3z"/></svg>
+          </button>
+          <div class="tip-box">
+            <p class="tip-label">✏ TIP — Bangla &amp; English</p>
+            <p class="tip-body" id="tipBody">Write clearly with steady strokes. Keep words spaced apart.</p>
+          </div>
+        </div>
+        <div class="draw-main-col">
+          <div class="card canvas-card">
+            <div class="canvas-header">
+              <span class="card-label">CANVAS</span>
+              <span class="canvas-hint">Bangla &amp; English · Click and drag to write</span>
+            </div>
+            <div class="canvas-wrap" id="canvasWrap">
+              <canvas id="drawCanvas"></canvas>
+            </div>
+          </div>
+          <div class="card draw-result-card">
+            <div class="card-label">RECOGNISED TEXT</div>
+            <div class="result-area small-result">
+              <div class="state-idle" id="drawIdle"><div class="idle-icon">✍</div><p>Draw above, then press Recognise</p></div>
+              <div class="state-working" id="drawWorking" style="display:none">
+                <div class="dots-loader"><span></span><span></span><span></span><span></span></div>
+                <p class="working-msg">Reading your handwriting…</p>
+              </div>
+              <div class="state-output" id="drawOutput" style="display:none">
+                <div class="meta-bar" id="drawMeta"></div>
+                <div class="conf-bar-wrap" id="drawConf"></div>
+                <div class="notebook draw-nb" id="drawNotebook"></div>
+                <div class="action-row">
+                  <button class="btn-action" onclick="copyText('drawRaw')">📋 Copy</button>
+                </div>
+                <textarea id="drawRaw" hidden></textarea>
+              </div>
+              <div class="state-error" id="drawError" style="display:none">
+                <span class="err-ico">⚠</span><span id="drawErrMsg"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="panel" id="panel-video">
+      <div class="two-col">
+        <div class="card card-input">
+          <div class="card-label">VIDEO INPUT</div>
+          <div class="dropzone" id="videoDrop">
+            <input type="file" id="videoInput" accept="video/*" hidden />
+            <div class="dz-body">
+              <div class="dz-icon">🎬</div>
+              <p class="dz-title">Drop video file here</p>
+              <p class="dz-sub">or <button class="dz-link" id="videoBrowse">browse files</button></p>
+              <p class="dz-formats">MP4 · MOV · AVI · MKV</p>
+              <p class="dz-note">Scene-based extraction · Smart deduplication</p>
+            </div>
+          </div>
+          <div class="file-chip" id="videoChip" style="display:none">
+            <div class="chip-thumb video-thumb">🎬</div>
+            <span class="chip-name" id="videoName"></span>
+            <button class="chip-remove" id="videoRemove">✕</button>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Recognition Language</label>
+            <select class="lang-select" id="videoLang">
+              <option value="auto">🌐 Auto Detect</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Translate Result To</label>
+            <div class="translate-btns" id="videoTranslateBtns">
+              <button class="trans-btn active" data-lang="">None</button>
+              <button class="trans-btn" data-lang="en">🇬🇧 English</button>
+              <button class="trans-btn" data-lang="bn">🇧🇩 Bangla</button>
+            </div>
+          </div>
+          <button class="btn-primary" id="videoBtn" disabled>
+            Scan Video
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M10 3l7 7-7 7-1.4-1.4 4.6-4.6H3V9h10.2L8.6 4.4 10 3z"/></svg>
+          </button>
+          <div class="progress-wrap" id="videoProgress" style="display:none">
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+            <p class="progress-msg" id="progressMsg">Extracting scenes…</p>
+          </div>
+        </div>
+        <div class="card card-result">
+          <div class="card-label">RESULT</div>
+          <div class="result-area">
+            <div class="state-idle" id="videoIdle"><div class="idle-icon">▶</div><p>Upload a video to begin scanning</p></div>
+            <div class="state-working" id="videoWorking" style="display:none">
+              <div class="dots-loader"><span></span><span></span><span></span><span></span></div>
+              <p class="working-msg" id="videoWorkingMsg">Detecting scenes…</p>
+            </div>
+            <div class="state-output" id="videoOutput" style="display:none">
+              <div class="overlay-img-wrap" id="videoOverlayWrap" style="display:none">
+                <img id="videoOverlayImg" src="" alt="OCR Overlay" class="overlay-img" />
+              </div>
+              <div class="meta-bar" id="videoMeta"></div>
+              <div class="conf-bar-wrap" id="videoConf"></div>
+              <div class="notebook" id="videoNotebook"></div>
+              <div class="translation-panel" id="videoTransPanel" style="display:none">
+                <div class="trans-header">
+                  <span class="trans-title" id="videoTransTitle">Translation</span>
+                  <button class="btn-action" onclick="copyText('videoTransRaw')">📋 Copy</button>
+                </div>
+                <div class="notebook trans-notebook" id="videoTransNotebook"></div>
+                <textarea id="videoTransRaw" hidden></textarea>
+              </div>
+              <div class="action-row">
+                <button class="btn-action" onclick="copyText('videoRaw')">📋 Copy</button>
+                <button class="btn-action" onclick="downloadTxt('videoRaw','truetrace_video')">💾 Save .txt</button>
+              </div>
+              <textarea id="videoRaw" hidden></textarea>
+            </div>
+            <div class="state-error" id="videoError" style="display:none">
+              <span class="err-ico">⚠</span><span id="videoErrMsg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="panel" id="panel-webcam">
+      <div class="two-col">
+        <div class="card card-input">
+          <div class="card-label">CAMERA</div>
+          <div class="webcam-frame">
+            <video id="webcamVideo" autoplay playsinline muted></video>
+            <canvas id="webcamSnap" style="display:none"></canvas>
+            <div class="webcam-idle" id="webcamIdle2"><div class="idle-icon">◎</div><p>Camera not active</p></div>
+            <div class="scan-line" id="scanLine" style="display:none"></div>
+          </div>
+          <div class="field-group" style="margin-top:12px">
+            <label class="field-label">Recognition Language</label>
+            <select class="lang-select" id="webcamLang">
+              <option value="auto">🌐 Auto Detect</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Translate Result To</label>
+            <div class="translate-btns" id="webcamTranslateBtns">
+              <button class="trans-btn active" data-lang="">None</button>
+              <button class="trans-btn" data-lang="en">🇬🇧 English</button>
+              <button class="trans-btn" data-lang="bn">🇧🇩 Bangla</button>
+            </div>
+          </div>
+          <div class="webcam-btns">
+            <button class="btn-ghost flex-1" id="webcamToggle">Start Camera</button>
+
+          </div>
+        </div>
+        <div class="card card-result">
+          <div class="card-label">RESULT</div>
+          <div class="result-area">
+            <div class="state-idle" id="webcamIdle"><div class="idle-icon">◎</div><p>Start camera — OCR runs automatically</p></div>
+            <div class="state-working" id="webcamWorking" style="display:none">
+              <div class="dots-loader"><span></span><span></span><span></span><span></span></div>
+              <p class="working-msg">Analysing frame…</p>
+            </div>
+            <div class="state-output" id="webcamOutput" style="display:none">
+              <div class="overlay-img-wrap" id="webcamOverlayWrap" style="display:none">
+                <img id="webcamOverlayImg" src="" alt="OCR Overlay" class="overlay-img" />
+              </div>
+              <div class="meta-bar" id="webcamMeta"></div>
+              <div class="conf-bar-wrap" id="webcamConf"></div>
+              <div class="notebook" id="webcamNotebook"></div>
+              <div class="translation-panel" id="webcamTransPanel" style="display:none">
+                <div class="trans-header">
+                  <span class="trans-title" id="webcamTransTitle">Translation</span>
+                  <button class="btn-action" onclick="copyText('webcamTransRaw')">📋 Copy</button>
+                </div>
+                <div class="notebook trans-notebook" id="webcamTransNotebook"></div>
+                <textarea id="webcamTransRaw" hidden></textarea>
+              </div>
+              <div class="action-row">
+                <button class="btn-action" onclick="copyText('webcamRaw')">📋 Copy</button>
+                <button class="btn-action" onclick="downloadTxt('webcamRaw','truetrace_webcam')">💾 Save .txt</button>
+              </div>
+              <textarea id="webcamRaw" hidden></textarea>
+            </div>
+            <div class="state-error" id="webcamError" style="display:none">
+              <span class="err-ico">⚠</span><span id="webcamErrMsg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="tt-footer">
+  <span>TrueTrace &nbsp;·&nbsp; Multilingual Handwriting Recognition</span>
+  <span id="footerStats">—</span>
+</footer>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
